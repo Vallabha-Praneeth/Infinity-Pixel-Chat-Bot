@@ -1,0 +1,1647 @@
+{
+  "name": "Ticket Manager (Airtable)",
+  "nodes": [
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "action",
+              "value": "={{ $json.action || $json.body?.action || '' }}"
+            },
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId || $json.body?.ticketId || '' }}"
+            },
+            {
+              "name": "customerName",
+              "value": "={{ $json.customerName || $json.name || $json.body?.name || $json.body?.customerName || '' }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $json.customerEmail || $json.email || $json.body?.email || $json.body?.customerEmail || '' }}"
+            },
+            {
+              "name": "channel",
+              "value": "={{ $json.subject || $json.body?.subject || 'No subject provided' }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject || $json.body?.subject || 'No subject provided' }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.description || $json.body?.description || '' }}"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $json.priority || $json.body?.priority || 'medium' }}"
+            },
+            {
+              "name": "additionalContext",
+              "value": "={{ $json.additionalContext || $json.body?.additionalContext || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb83c141-f36f-41a8-ac6e-bfd037fbb8bf",
+      "name": "Normalize Inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        48,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.action || $json.body?.action || '' }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "create",
+              "outputKey": "create"
+            },
+            {
+              "value2": "update",
+              "outputKey": "update"
+            },
+            {
+              "value2": "status",
+              "outputKey": "status"
+            },
+            {
+              "value2": "close",
+              "outputKey": "close"
+            }
+          ]
+        }
+      },
+      "id": "c77d71d5-2cfc-4a38-8899-8ce065a2a7b1",
+      "name": "Action Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        496,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const itemsOut = [];\nfor (const item of items) {\n  const now = new Date();\n  const ts = now.getTime();\n  const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');\n  const ticketId = `TCK-${ts}-${rand}`;\n\n  const priority = (item.json.priority || 'medium').toLowerCase();\n  let slaDays = 3;\n  if (priority === 'high') slaDays = 1;\n  if (priority === 'low') slaDays = 7;\n  const slaDue = new Date(now.getTime() + slaDays * 24 * 60 * 60 * 1000);\n\n  itemsOut.push({\n    json: {\n      ticketId,\n      customerName: item.json.customerName,\n      customerEmail: item.json.customerEmail,\n      channel: item.json.channel,\n      subject: item.json.subject,\n      initialDescription: item.json.description,\n      conversationLog: `[${now.toISOString()}] Initial: ${item.json.description || ''}`,\n      priority,\n      status: 'open',\n      createdAt: now.toISOString(),\n      updatedAt: now.toISOString(),\n      slaDueAt: slaDue.toISOString(),\n      additionalContext: item.json.additionalContext || ''\n    }\n  });\n}\nreturn itemsOut;\n"
+      },
+      "id": "7641eefe-fa2b-4ffe-9cb5-17890de65fd9",
+      "name": "Code - Prepare Create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appEQ1o4iqY0Nv5bB",
+          "mode": "list",
+          "cachedResultName": "airtable_tickets_template.csv",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9AlVNEOqUcpRCb",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ticket ID": "={{ $json.ticketId }}",
+            "Customer Name": "={{ $json.customerName }}",
+            "Customer Email": "={{ $json.customerEmail }}",
+            "Channel": "={{ $json.channel }}",
+            "Subject": "={{ $json.subject }}",
+            "Initial Description": "={{ $json.initialDescription }}",
+            "Conversation Log": "={{ $json.conversationLog }}",
+            "Priority": "={{ $json.priority }}",
+            "Status": "={{ $json.status }}",
+            "Created At": "={{ $json.createdAt }}",
+            "Updated At": "={{ $json.updatedAt }}",
+            "SLA Due At": "={{ $json.slaDueAt }}",
+            "Internal Notes": "={{ $json.additionalContext }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Initial Description",
+              "displayName": "Initial Description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Conversation Log",
+              "displayName": "Conversation Log",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Updated At",
+              "displayName": "Updated At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "SLA Due At",
+              "displayName": "SLA Due At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Internal Notes",
+              "displayName": "Internal Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3beaf13a-95b1-4047-90af-fdb129a762fe",
+      "name": "Airtable - Create Ticket",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        -272
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "qs12oVW3iuGzAAiI",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "if (items.length === 0) {\n    return [{\n      json: {\n        action: 'status',\n        ticketId: '',\n        status: 'not_found',\n        priority: '',\n        messageForUser: 'I could not find a ticket with that ID. Please check the ID or create a new ticket.',\n        internalNotes: ''\n      }\n    }];\n  }\n\n  return items.map(item => {\n    const rec = item.json || {};\n    const fields = rec.fields || rec; // handle cases where fields are at top-level\n    const ticketId = fields['Ticket ID'] || rec.ticketId || '';\n    const status = fields['Status'] || rec.status || '';\n    const subject = fields['Subject'] || rec.subject || '';\n    const priority = fields['Priority'] || rec.priority || 'medium';\n\n    return {\n      json: {\n        action: 'status',\n        ticketId,\n        status,\n        priority,\n        messageForUser: `Ticket ${ticketId || 'unknown'} is currently ${status || 'unknown'}. Subject: ${subject ||\n  'unspecified'}.`,\n        internalNotes: fields['Internal Notes'] || rec.internalNotes || ''\n      }\n    };\n  });"
+      },
+      "id": "a58377a0-f420-4ee2-8248-0792580bc8c2",
+      "name": "Code - Build Status Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        712
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "if (items.length === 0) {\n      return [{\n        json: {\n          action: 'update',\n          ticketId: '',\n          status: 'not_found',\n          priority: '',\n          subject: '',\n          customerName: '',\n          customerEmail: '',\n          messageForUser: 'I could not find a ticket with that ID to update. Please check the ID.',\n          internalNotes: '',\n          skipUpdate: true,\n        }\n      }];\n    }\n\n    const now = new Date();\n    return items.map(item => {\n      const rec = item.json || {};\n      const fields = rec.fields || rec;\n      const ticketId = fields['Ticket ID'] || rec.ticketId || '';\n      const currentStatus = fields['Status'] || rec.status || 'open';\n      const updateText = (rec.description ?? rec.body?.description ?? '').trim();\n      const oldLog = fields['Conversation Log'] || rec.conversationLog || '';\n      const priority = fields['Priority'] || rec.priority || 'medium';\n      const internalNotes = fields['Internal Notes'] || rec.internalNotes || '';\n      const subject = fields['Subject'] || rec.subject || '';\n      const customerName = fields['Customer Name'] || rec.customerName || '';\n      const customerEmail = fields['Customer Email'] || rec.customerEmail || '';\n\n      // CHECK 1: Block if ticket is closed or resolved\n      if (['closed', 'resolved'].includes(currentStatus)) {\n        return {\n          json: {\n            action: 'update',\n            ticketId,\n            status: currentStatus,\n            priority,\n            subject,\n            customerName,\n            customerEmail,\n            messageForUser: `Ticket ${ticketId} is ${currentStatus} and cannot be updated. Please open a new ticket or ask to reopen.`,\n            internalNotes,\n            skipUpdate: true,\n          }\n        };\n      }\n\n      // CHECK 2: Block if no update text provided\n      if (!updateText) {\n        return {\n          json: {\n            action: 'update',\n            ticketId,\n            status: currentStatus,\n            priority,\n            subject,\n            customerName,\n            customerEmail,\n            messageForUser: 'Please provide the update details so I can add them to your ticket.',\n            internalNotes,\n            skipUpdate: true,\n          }\n        };\n      }\n\n      // ALL CHECKS PASSED: Proceed with update\n      const newLog = oldLog\n        ? `${oldLog}\\n[${now.toISOString()}] User update: ${updateText}`\n        : `[${now.toISOString()}] User update: ${updateText}`;\n\n      return {\n        json: {\n          airtableRecordId: rec.id,\n          ticketId,\n          subject,\n          customerName,\n          customerEmail,\n          conversationLog: newLog,\n          status: currentStatus,\n          priority,\n          updatedAt: now.toISOString(),\n          internalNotes,\n          messageForUser: '',\n          skipUpdate: false,\n        }\n      };\n    });"
+      },
+      "id": "fce49478-8533-413b-9373-b5be38867035",
+      "name": "Code - Prepare Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        944,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "if (items.length === 0) {\n    return [{\n      json: {\n        action: 'close',\n        ticketId: '',\n        status: 'not_found',\n        priority: '',\n        messageForUser: 'I could not find a ticket with that ID to close.',\n        internalNotes: ''\n      }\n    }];\n  }\n\n  const now = new Date();\n  return items.map(item => {\n    const rec = item.json || {};\n    const fields = rec.fields || rec;\n    const ticketId = fields['Ticket ID'] || rec.ticketId || '';\n    const priority = fields['Priority'] || rec.priority || 'medium';\n    const internalNotes = fields['Internal Notes'] || rec.internalNotes || '';\n    const currentStatus = fields['Status'] || rec.status || 'open';\n    const alreadyClosed = currentStatus === 'closed';\n\n    return {\n      json: {\n        airtableRecordId: rec.id,\n        ticketId,\n        status: 'closed',\n        priority,\n        updatedAt: now.toISOString(),\n        messageForUser: alreadyClosed\n          ? `Ticket ${ticketId} is already closed.`\n          : `I've closed ticket ${ticketId}. If you run into the issue again, you can create\n   a new ticket anytime.`,\n        internalNotes,\n      }\n    };\n  });"
+      },
+      "id": "021e1e26-78b3-4f90-bafb-8d801713a154",
+      "name": "Code - Prepare Close",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        1048
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": " const items = $input.all();\n  const result = items.map((item) => {\n    const j = item.json || {};\n    const b = j.body || {};\n    return {\n      action: j.action ?? b.action ?? '',\n      ticketId: j.ticketId ?? b.ticketId ?? '',\n      customerName: j.customerName ?? j.name ?? b.customerName ?? b.name ?? '',\n      customerEmail: j.customerEmail ?? j.email ?? b.customerEmail ?? b.email ?? '',\n      channel: j.channel ?? b.channel ?? 'chat',\n      subject: j.subject ?? b.subject ?? 'No subject provided',\n      description: j.description ?? b.description ?? '',\n      priority: j.priority ?? b.priority ?? 'medium',\n      additionalContext: j.additionalContext ?? b.additionalContext ?? '',\n    };\n  });\n\n  return result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        304
+      ],
+      "id": "1b943ca9-2b2a-46d6-a7a4-7cedbbeb9123",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "name"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "subject"
+            },
+            {
+              "name": "description"
+            },
+            {
+              "name": "priority"
+            },
+            {
+              "name": "action"
+            },
+            {
+              "name": "ticketId"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        208
+      ],
+      "id": "57e4d6d6-ca88-47c0-a468-bf2d565c56f0",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appEQ1o4iqY0Nv5bB",
+          "mode": "list",
+          "cachedResultName": "airtable_tickets_template.csv",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9AlVNEOqUcpRCb",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb"
+        },
+        "filterByFormula": "={Ticket ID}='{{ $json.ticketId }}'",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "id": "c20c51f1-07d4-4abe-8112-a55bef7beece",
+      "name": "Airtable - Find Ticket (Update)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        720,
+        208
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "NQeLpGGrylISnMLt",
+          "name": "Dileeps"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appEQ1o4iqY0Nv5bB",
+          "mode": "list",
+          "cachedResultName": "airtable_tickets_template.csv",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9AlVNEOqUcpRCb",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ticket ID": "={{ $json.ticketId }}",
+            "Customer Name": "={{ $json.customerName }}",
+            "Customer Email": "={{ $json.customerEmail }}",
+            "Channel": "={{ $json.channel }}",
+            "Subject": "={{ $json.subject }}",
+            "Initial Description": "={{ $json.initialDescription }}",
+            "Conversation Log": "={{ $json.conversationLog }}",
+            "Priority": "={{ $json.priority }}",
+            "Status": "={{ $json.status }}",
+            "Created At": "={{ $json.createdAt }}",
+            "Updated At": "={{ $json.updatedAt }}",
+            "SLA Due At": "={{ $json.slaDueAt }}",
+            "Internal Notes": "={{ $json.additionalContext }}",
+            "id": "={{ $json.airtableRecordId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Initial Description",
+              "displayName": "Initial Description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Conversation Log",
+              "displayName": "Conversation Log",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Updated At",
+              "displayName": "Updated At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "SLA Due At",
+              "displayName": "SLA Due At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Internal Notes",
+              "displayName": "Internal Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "237438b2-4409-4fdd-8732-7cfeac355382",
+      "name": "Airtable - Update Ticket",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        208
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "NQeLpGGrylISnMLt",
+          "name": "Dileeps"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appEQ1o4iqY0Nv5bB",
+          "mode": "list",
+          "cachedResultName": "airtable_tickets_template.csv",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9AlVNEOqUcpRCb",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb"
+        },
+        "filterByFormula": "={Ticket ID}='{{ $json.ticketId }}'",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "id": "f8a3ad27-2cc5-41f5-9f12-1cf8ffb9bab2",
+      "name": "Airtable - Find Ticket (Close)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        944,
+        1048
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "NQeLpGGrylISnMLt",
+          "name": "Dileeps"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appEQ1o4iqY0Nv5bB",
+          "mode": "list",
+          "cachedResultName": "airtable_tickets_template.csv",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9AlVNEOqUcpRCb",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb"
+        },
+        "filterByFormula": "={Ticket ID}='{{ $json.ticketId }}'",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "id": "ccde50d9-e2c1-4220-8c6a-ee0781b23dcd",
+      "name": "Airtable - Find Ticket (Status)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        712
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "NQeLpGGrylISnMLt",
+          "name": "Dileeps"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c4264387-c383-40df-ac5d-66c0f14efa0d",
+              "leftValue": "={{ $json.skipUpdate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "858157dd-3a67-47fe-b805-88acff97a251",
+      "name": "IF - Should Update",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appEQ1o4iqY0Nv5bB",
+          "mode": "list",
+          "cachedResultName": "airtable_tickets_template.csv",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl9AlVNEOqUcpRCb",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Priority": "={{ $json.priority }}",
+            "Status": "={{ $json.status }}",
+            "Updated At": "={{ $json.updatedAt }}",
+            "Internal Notes": "={{ $json.additionalContext }}",
+            "id": "={{ $json.airtableRecordId }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Initial Description",
+              "displayName": "Initial Description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Conversation Log",
+              "displayName": "Conversation Log",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Updated At",
+              "displayName": "Updated At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "SLA Due At",
+              "displayName": "SLA Due At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Internal Notes",
+              "displayName": "Internal Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c29cf5e7-2b7a-49f0-9caf-8bd243688710",
+      "name": "Airtable - Close Ticket",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        1048
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "NQeLpGGrylISnMLt",
+          "name": "Dileeps"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tt",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        400
+      ],
+      "id": "719f962c-08ba-4778-81b3-a9edc1ac1464",
+      "name": "Webhook",
+      "webhookId": "5d96cb6f-8d4e-4ef0-9641-e5ebe9950c71"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2160,
+        256
+      ],
+      "id": "a9d43116-7534-43f8-ad41-5d3d9956a818",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0].json;\n  const fields = item.fields || {};\n  const recordId = item.id;\n\n  const ticketId = fields['Ticket ID'] || '';\n  const subject = fields['Subject'] || 'No subject';\n  const priority = fields['Priority'] || 'medium';\n  const status = fields['Status'] || 'open';\n  const description = fields['Initial Description'] || '';\n  const customerName = fields['Customer Name'] || 'Unknown';\n  const customerEmail = fields['Customer Email'] || '';\n\n  // Build Airtable link\n  const airtableLink =\n  `https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb/${recordId}`;\n\n  // Priority emoji\n  const priorityEmoji = {\n    'high': '🔴',\n    'urgent': '🔴',\n    'medium': '🟡',\n    'low': '🟢'\n  }[priority.toLowerCase()] || '🟡';\n\n  // Build Slack message\n  const slackMessage = `🎫 *New Ticket Created*\n\n  *Ticket ID:* ${ticketId}\n  *Subject:* ${subject}\n  *Priority:* ${priorityEmoji} ${priority.toUpperCase()}\n  *Status:* ${status}\n  *Customer:* ${customerName} (${customerEmail})\n\n  *Description:*\n  ${description.substring(0, 200)}${description.length > 200 ? '...' : ''}\n\n  📋 *View in Airtable:*\n  ${airtableLink}`;\n\n  return [{\n    json: {\n      text: slackMessage,\n      ticketId,\n      airtableLink,\n      recordId\n    }\n  }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -272
+      ],
+      "id": "136be9d5-3ade-4970-af51-069d72ad9af7",
+      "name": "Code - Prepare Slack Message (Create)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0].json;\n  const fields = item.fields || {};\n  const recordId = item.id;\n\n  // Get ticket info\n  const ticketId = fields['Ticket ID'] || $('Code - Prepare Close').item.json.ticketId ||\n  '';\n  const subject = fields['Subject'] || 'No subject';\n  const priority = fields['Priority'] || 'medium';\n  const customerName = fields['Customer Name'] || 'Unknown';\n\n  // Build Airtable link\n  const airtableLink =\n  `https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb/${recordId}`;\n\n  // Priority emoji\n  const priorityEmoji = {\n    'high': '🔴',\n    'urgent': '🔴',\n    'medium': '🟡',\n    'low': '🟢'\n  }[priority.toLowerCase()] || '🟡';\n\n  // Build message\n  const slackMessage = `✅ *Ticket Closed*\n\n  *Ticket ID:* ${ticketId}\n  *Subject:* ${subject}\n  *Priority:* ${priorityEmoji} ${priority.toUpperCase()}\n  *Customer:* ${customerName}\n  *Status:* CLOSED\n\n  📋 *View in Airtable:*\n  ${airtableLink}`;\n\n  return [{\n    json: {\n      text: slackMessage,\n      ticketId,\n      airtableLink,\n      recordId\n    }\n  }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        1168
+      ],
+      "id": "accea33c-758d-4220-8b17-da842b878508",
+      "name": "Code - Prepare Slack Message (Close)"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09VBFVEP5M",
+          "mode": "list",
+          "cachedResultName": "customer-service-ticket-manager"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1888,
+        1168
+      ],
+      "id": "ccd6d964-44aa-4ede-8e29-0574b1130841",
+      "name": "Send a message2",
+      "webhookId": "906cd319-416c-4b29-8254-cf92616ed548",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "3sgNBOVwJzPBaO6j",
+          "name": "Slack account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09VBFVEP5M",
+          "mode": "list",
+          "cachedResultName": "customer-service-ticket-manager"
+        },
+        "messageType": "block",
+        "blocksUi": "=[\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*New Ticket Created*\\n\\n*Ticket ID:* {{$json.ticketId}}\\n*Subject:* {{ $('Airtable - Create Ticket').item.json.fields.Subject }}\\n*Priority:* {{ $('Airtable - Create Ticket').item.json.fields.Priority }}\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"block_id\": \"ticket_actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": {\"type\": \"plain_text\", \"text\": \"Assign to Me\"},\n          \"style\": \"primary\",\n          \"action_id\": \"assign_ticket\",\n          \"value\": \"{{$json.ticketId}}\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": {\"type\": \"plain_text\", \"text\": \"Close Ticket\"},\n          \"style\": \"danger\",\n          \"action_id\": \"close_ticket\",\n          \"value\": \"{{$json.ticketId}}\"\n        }\n      ]\n    }\n  ]",
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1840,
+        -272
+      ],
+      "id": "c6c78934-b634-4e86-9920-422940c8cb86",
+      "name": "Send a message",
+      "webhookId": "906cd319-416c-4b29-8254-cf92616ed548",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "RApDjOvJGy6gWZtj",
+          "name": "Qops Slack Cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": " const item = items[0].json;\n  const fields = item.fields || {};\n  const recordId = item.id;\n\n  const ticketId = fields['Ticket ID'] || $('Code - Prepare Update').item.json.ticketId ||\n  '';\n  const subject = fields['Subject'] || 'No subject';\n  const priority = fields['Priority'] || 'medium';\n  const status = fields['Status'] || 'open';\n  const conversationLog = fields['Conversation Log'] || '';\n\n  // Get just the latest update (last entry in log)\n  const logEntries = conversationLog.split('\\n[');\n  const latestUpdate = logEntries[logEntries.length - 1] || '';\n\n  const airtableLink =\n  `https://airtable.com/appEQ1o4iqY0Nv5bB/tbl9AlVNEOqUcpRCb/${recordId}`;\n\n  const priorityEmoji = {\n    'high': '🔴',\n    'urgent': '🔴',\n    'medium': '🟡',\n    'low': '🟢'\n  }[priority.toLowerCase()] || '🟡';\n\n  const slackMessage = `📝 *Ticket Updated*\n\n  *Ticket ID:* ${ticketId}\n  *Subject:* ${subject}\n  *Priority:* ${priorityEmoji} ${priority.toUpperCase()}\n  *Status:* ${status}\n\n  *Latest Update:*\n  ${latestUpdate.substring(0, 200)}${latestUpdate.length > 200 ? '...' : ''}\n\n  📋 *View in Airtable:*\n  ${airtableLink}`;\n\n  return [{\n    json: {\n      text: slackMessage,\n      ticketId,\n      airtableLink,\n      recordId\n    }\n  }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        208
+      ],
+      "id": "e1cc2282-8ff6-4663-92f8-95ca2916e498",
+      "name": "Code - Prepare Slack Message (Update)"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09VBFVEP5M",
+          "mode": "list",
+          "cachedResultName": "customer-service-ticket-manager"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        208
+      ],
+      "id": "05b4283d-0e33-45b3-a88c-a298549b205f",
+      "name": "Send a message1",
+      "webhookId": "906cd319-416c-4b29-8254-cf92616ed548",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "3sgNBOVwJzPBaO6j",
+          "name": "Slack account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0].json;\n\n    // Extract action from various possible sources\n    let action = item.action || item.query?.action || item.body?.action || '';\n\n    // Convert to lowercase and trim\n    action = String(action).toLowerCase().trim();\n\n    // Intelligent action detection if action is missing or wrong\n    if (!action || !['create', 'status', 'update', 'close'].includes(action)) {\n\n      console.log(`⚠️ Invalid or missing action: \"${action}\". Attempting to infer...`);\n\n      // Try to infer action from context based on what fields are present\n      const hasTicketId = !!(item.ticketId || item.ticket_id || item.body?.ticketId || item.body?.ticket_id);\n      const hasDescription = !!(item.description || item.body?.description);\n      const hasSubject = !!(item.subject || item.body?.subject);\n      const hasName = !!(item.name || item.body?.name);\n      const hasEmail = !!(item.email || item.body?.email);\n      const hasPriority = !!(item.priority || item.body?.priority);\n\n      // Detection logic\n      if (hasTicketId && hasDescription && !hasSubject) {\n        // Has ticket ID + description but no subject = likely UPDATE\n        action = 'update';\n        console.log(`✅ Inferred action: \"update\" (ticketId + description present)`);\n\n      } else if (hasTicketId && !hasDescription && !hasSubject) {\n        // Has only ticket ID = likely STATUS check\n        action = 'status';\n        console.log(`✅ Inferred action: \"status\" (only ticketId present)`);\n\n      } else if (hasName && hasEmail && hasSubject && hasDescription) {\n        // Has customer info + subject + description = likely CREATE\n        action = 'create';\n        console.log(`✅ Inferred action: \"create\" (customer info + subject + description present)`);\n\n      } else if (hasTicketId && (item.status === 'closed' || item.body?.status === 'closed')) {\n        // Has ticket ID + status=closed = likely CLOSE\n        action = 'close';\n        console.log(`✅ Inferred action: \"close\" (ticketId + status=closed)`);\n\n      } else if (hasTicketId) {\n        // Default: if we have ticket ID, assume status check\n        action = 'status';\n        console.log(`✅ Inferred action: \"status\" (fallback - ticketId present)`);\n\n      } else {\n        // Last resort: assume create\n        action = 'create';\n        console.log(`⚠️ Could not infer action reliably. Defaulting to \"create\"`);\n      }\n    }\n\n    console.log(`✅ Final action: \"${action}\"`);\n\n    // Normalize ticketId field (handle both ticketId and ticket_id from top-level and body)\n    const ticketId = item.ticketId || item.ticket_id || item.body?.ticketId || item.body?.ticket_id || '';\n\n    // Return normalized item with correct action\n    return [{\n      json: {\n        ...item,\n        action: action,\n        ticketId: ticketId // Ensure consistent field name\n      }\n    }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        304
+      ],
+      "id": "1349f135-96e8-412c-bb04-c929de7a16d3",
+      "name": "Normalize & Validate Action"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://polarmedia.app.n8n.cloud/webhook/notify-customer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $json.priority }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $json.customerEmail }}"
+            },
+            {
+              "name": "customerName",
+              "value": "={{ $json.customerName }}"
+            },
+            {
+              "name": "messageForUser",
+              "value": "={{ $json.messageForUser }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1840,
+        -80
+      ],
+      "id": "ee653162-d6af-40bc-aa61-6d9f4168c400",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n    // Handle data from Airtable (after close)\n    const fields = item.json.fields || {};\n\n    // Get ticketId from multiple sources including explicit node reference\n    const ticketId = item.json.ticketId ||\n      fields['Ticket ID'] ||\n      $('Code - Prepare Close').item.json.ticketId ||\n      '';\n\n    const status = item.json.status || fields['Status'] || 'closed';\n    const priority = fields['Priority'] || item.json.priority || 'medium';\n    const subject = fields['Subject'] || item.json.subject || '';\n    const customerName = fields['Customer Name'] || item.json.customerName || '';\n    const customerEmail = fields['Customer Email'] || item.json.customerEmail || '';\n    const internalNotes = fields['Internal Notes'] || item.json.internalNotes || '';\n\n    const messageForUser = item.json.messageForUser ||\n      `I've created ticket ${ticketId} for your issue \"${subject}\". Our team will get back to you soon.`;\n\n    return {\n      json: {\n        action: 'close',\n        ticketId,\n        status,\n        priority,\n        subject,\n        customerName,\n        customerEmail,\n        messageForUser,\n        internalNotes\n      }\n    };\n  });"
+      },
+      "id": "6d08c95b-ca90-403a-a257-24d23d245f80",
+      "name": "Code - Build Create Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n      const fields = item.json.fields || {};\n\n      // Try to get data from current item first\n      let ticketId = fields['Ticket ID'] || item.json.ticketId || item.json['Ticket ID'] || '';\n      let status = fields['Status'] || item.json.status || item.json['Status'] || 'open';\n      let priority = fields['Priority'] || item.json.priority || item.json['Priority'] || 'medium';\n      let subject = fields['Subject'] || item.json.subject || item.json['Subject'] || '';\n      let customerName = fields['Customer Name'] || item.json.customerName || item.json['Customer Name'] || '';\n      let customerEmail = fields['Customer Email'] || item.json.customerEmail || item.json['Customer Email'] || '';\n      let internalNotes = fields['Internal Notes'] || item.json.internalNotes || '';\n\n      // If fields are missing, pull from the Airtable find result\n      const findResult = $('Airtable - Find Ticket (Update)').first().json;\n      const findFields = findResult?.fields || {};\n\n      if (!subject) subject = findFields['Subject'] || '';\n      if (!customerName) customerName = findFields['Customer Name'] || '';\n      if (!customerEmail) customerEmail = findFields['Customer Email'] || '';\n      if (!ticketId) ticketId = findFields['Ticket ID'] || '';\n      if (!internalNotes) internalNotes = findFields['Internal Notes'] || '';\n\n      const messageForUser =\n        item.json.messageForUser ||\n        fields['Message For User'] ||\n        `I've updated your ticket ${ticketId} with your latest message.`;\n\n      return {\n        json: {\n          action: 'update',\n          ticketId,\n          status,\n          priority,\n          subject,\n          customerName,\n          customerEmail,\n          messageForUser,\n          internalNotes\n        }\n      };\n    });"
+      },
+      "id": "767ea76e-408e-4a98-9034-696753484309",
+      "name": "Code - Build Update Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n    // Handle data from Airtable (after close)\n    const fields = item.json.fields || {};\n\n    // Get ticketId from multiple sources including explicit node reference\n    const ticketId = item.json.ticketId ||\n      fields['Ticket ID'] ||\n      $('Code - Prepare Close').item.json.ticketId ||\n      '';\n\n    const status = item.json.status || fields['Status'] || 'closed';\n    const priority = fields['Priority'] || item.json.priority || 'medium';\n    const subject = fields['Subject'] || item.json.subject || '';\n    const customerName = fields['Customer Name'] || item.json.customerName || '';\n    const customerEmail = fields['Customer Email'] || item.json.customerEmail || '';\n    const internalNotes = fields['Internal Notes'] || item.json.internalNotes || '';\n\n    const messageForUser = item.json.messageForUser ||\n      `I've closed ticket ${ticketId}. If you run into the issue again, you can create a new ticket anytime.`;\n\n    return {\n      json: {\n        action: 'close',\n        ticketId,\n        status,\n        priority,\n        subject,\n        customerName,\n        customerEmail,\n        messageForUser,\n        internalNotes\n      }\n    };\n  });"
+      },
+      "id": "78b5da16-bd39-41ee-90ac-5083f1f3cfd6",
+      "name": "Code - Build Close Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        952
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://polarmedia.app.n8n.cloud/webhook/notify-customer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $json.priority }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $json.customerEmail }}"
+            },
+            {
+              "name": "customerName",
+              "value": "={{ $json.customerName }}"
+            },
+            {
+              "name": "messageForUser",
+              "value": "={{ $json.messageForUser }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1824,
+        480
+      ],
+      "id": "a51fb5d7-ad87-4bea-a495-85b3c6451e6c",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://polarmedia.app.n8n.cloud/webhook/notify-customer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $json.priority }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $json.customerEmail }}"
+            },
+            {
+              "name": "customerName",
+              "value": "={{ $json.customerName }}"
+            },
+            {
+              "name": "messageForUser",
+              "value": "={{ $json.messageForUser }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1888,
+        944
+      ],
+      "id": "d019c154-09e0-4f86-b1e6-0f98909839ca",
+      "name": "HTTP Request2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Normalize Inputs": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Prepare Create": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Code - Prepare Slack Message (Create)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code - Build Create Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Prepare Update": {
+      "main": [
+        [
+          {
+            "node": "IF - Should Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Prepare Close": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Close Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Switch": {
+      "main": [
+        [
+          {
+            "node": "Code - Prepare Create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Find Ticket (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Find Ticket (Status)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable - Find Ticket (Close)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Action Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Status Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Validate Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Find Ticket (Update)": {
+      "main": [
+        [
+          {
+            "node": "Code - Prepare Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Update Ticket": {
+      "main": [
+        [
+          {
+            "node": "Code - Prepare Slack Message (Update)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code - Build Update Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Find Ticket (Close)": {
+      "main": [
+        [
+          {
+            "node": "Code - Prepare Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Find Ticket (Status)": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Status Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Should Update": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Update Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code - Build Update Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Close Ticket": {
+      "main": [
+        [
+          {
+            "node": "Code - Prepare Slack Message (Close)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code - Build Close Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Validate Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Prepare Slack Message (Create)": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Prepare Slack Message (Close)": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Prepare Slack Message (Update)": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Validate Action": {
+      "main": [
+        [
+          {
+            "node": "Normalize Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Create Response": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Close Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Update Response1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "02746ddf-6651-443d-94af-4d7c177f15f9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "00909d7feb8e9ba37a5e201aa76b7e43bb3e29d20ad98700fd8a52c9ea9d3d68"
+  },
+  "id": "GrVcpskgWgZiXxle",
+  "tags": [
+    {
+      "updatedAt": "2025-11-27T10:22:21.062Z",
+      "createdAt": "2025-11-27T10:22:21.062Z",
+      "id": "EAr9AJ6BQZMho4oJ",
+      "name": "customer issues"
+    },
+    {
+      "updatedAt": "2025-10-30T10:35:00.782Z",
+      "createdAt": "2025-10-30T10:35:00.782Z",
+      "id": "NqbYJnj9bWiTl899",
+      "name": "Dileep"
+    }
+  ]
+}

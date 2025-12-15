@@ -1,0 +1,2 @@
+Ticket ID,Customer Name,Customer Email,Channel,Subject,Initial Description,Conversation Log,Priority,Status,Created At,Updated At,SLA Due At,Internal Notes
+TCK-1764314974531-916,Sample User,sample@example.com,chat,Sample ticket created from template,This is a sample description of the user's issue.,[2025-11-28T07:29:34.531777Z] Initial: This is a sample description of the user's issue.,medium,open,2025-11-28T07:29:34.531777Z,2025-11-28T07:29:34.531777Z,2025-12-01T07:29:34.531777Z,Sample internal notes field.

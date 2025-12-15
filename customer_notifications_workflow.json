@@ -1,0 +1,233 @@
+{
+  "name": "Customer Ticket Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "notify-customer",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d7a9c5c8-17a2-4e7d-9e8a-9147b40b6b79",
+      "name": "Webhook - Notification In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        160
+      ],
+      "webhookId": "e5f7c2d0-7b1b-4d7c-9807-7c1a0a6c4a52"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "ticketId",
+              "value": "={{ $json.ticketId || $json.body?.ticketId || '' }}"
+            },
+            {
+              "name": "event",
+              "value": "={{ ($json.event || $json.body?.event || '').toLowerCase() }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status || $json.body?.status || 'open' }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject || $json.body?.subject || 'No subject provided' }}"
+            },
+            {
+              "name": "priority",
+              "value": "={{ ($json.priority || $json.body?.priority || 'medium').toLowerCase() }}"
+            },
+            {
+              "name": "customerName",
+              "value": "={{ $json.customerName || $json.body?.customerName || 'Customer' }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $json.customerEmail || $json.body?.customerEmail || '' }}"
+            },
+            {
+              "name": "channel",
+              "value": "={{ $json.channel || $json.body?.channel || 'chat' }}"
+            },
+            {
+              "name": "messageForUser",
+              "value": "={{ $json.messageForUser || $json.body?.messageForUser || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c5f6ddac-9baf-4e8b-b4a0-9f6d1f63e3e3",
+      "name": "Set - Normalize Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0].json;\n\nconst eventRaw = (item.event || '').toLowerCase();\nconst event = ['created', 'updated', 'closed'].includes(eventRaw) ? eventRaw : 'updated';\nconst ticketId = item.ticketId || 'unknown';\nconst status = item.status || 'open';\nconst subject = item.subject || 'Ticket update';\nconst priority = item.priority || 'medium';\nconst customerName = item.customerName || 'Customer';\nconst channel = item.channel || 'chat';\n\nconst subjectPrefix = {\n  created: 'Ticket created',\n  updated: 'Ticket updated',\n  closed: 'Ticket closed',\n}[event] || 'Ticket update';\n\nconst messageForUser = item.messageForUser || 'Here is an update on your ticket.';\n\nconst emailSubject = `${subjectPrefix} | ${ticketId}`;\nconst emailBody = `Hi ${customerName},\\n\\n${messageForUser}\\n\\nTicket ID: ${ticketId}\\nSubject: ${subject}\\nPriority: ${priority}\\nStatus: ${status}\\nChannel: ${channel}\\n\\nIf you have more details to add, just reply to this email or chat with us.\\n\\nThanks,\\nQuantum-Ops Support`;\n\nreturn [{\n  json: {\n    ...item,\n    event,\n    emailSubject,\n    emailBody\n  }\n}];"
+      },
+      "id": "af51d4ce-ef95-4f71-9c0c-6457d01f12e1",
+      "name": "Code - Build Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        48,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.customerEmail }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "b5a33c13-d8b5-4a58-9298-2735c6579c77",
+      "name": "IF - Has Customer Email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        320,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "support@example.com",
+        "toEmail": "={{ $json.customerEmail }}",
+        "subject": "={{ $json.emailSubject }}",
+        "text": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "id": "d1c0b4af-1d07-4690-9e5f-3e11f5f5b5c1",
+      "name": "Email - Send Customer Update",
+      "type": "n8n-nodes-base.email",
+      "typeVersion": 2,
+      "position": [
+        608,
+        80
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "replace-with-credential-id",
+          "name": "SMTP placeholder"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ { \"delivered\": true, \"ticketId\": $json.ticketId, \"event\": $json.event } }}",
+        "responseCode": 200
+      },
+      "id": "5f75d1c7-05f3-4cfb-a6a2-3777f64b2f52",
+      "name": "Respond - Delivered",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        864,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ { \"delivered\": false, \"reason\": \"customerEmail missing\", \"ticketId\": $json.ticketId || '' } }}",
+        "responseCode": 400
+      },
+      "id": "37c6b1cc-41e1-441f-8e09-0b26c522043f",
+      "name": "Respond - Missing Email",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        608,
+        272
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Notification In": {
+      "main": [
+        [
+          {
+            "node": "Set - Normalize Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Normalize Payload": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Email Content": {
+      "main": [
+        [
+          {
+            "node": "IF - Has Customer Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Has Customer Email": {
+      "main": [
+        [
+          {
+            "node": "Email - Send Customer Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Missing Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email - Send Customer Update": {
+      "main": [
+        [
+          {
+            "node": "Respond - Delivered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "customer-ticket-notifications",
+  "meta": {
+    "version": "1.118.2",
+    "description": "Standalone notifier workflow. POST to /webhook/notify-customer with ticket details to email the customer."
+  }
+}

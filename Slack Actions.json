@@ -1,0 +1,60 @@
+{
+  "name": "Slack Actions",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-actions",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "66f94aaa-96b0-4324-9e51-1da70d1d0c8b",
+      "name": "Webhook",
+      "webhookId": "e44d6fee-cf60-4b0a-bda4-e08d190a5767"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For now, just log whatever Slack sends us and pass it through\nconsole.log('Slack actions payload:', items[0]);\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "93f12c3b-4a55-4168-94df-ed1cda225aa8",
+      "name": "Slack Debug"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Slack Debug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a99e211a-5ce0-4fe7-89d9-0b4db41ea5f6",
+  "meta": {
+    "instanceId": "00909d7feb8e9ba37a5e201aa76b7e43bb3e29d20ad98700fd8a52c9ea9d3d68"
+  },
+  "id": "xEwi4EbaA4Wbbqm6",
+  "tags": []
+}

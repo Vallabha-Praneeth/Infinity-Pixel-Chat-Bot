@@ -1,0 +1,947 @@
+{
+  "name": "RAG Workflow For( Customer service chat-bot)",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "customer-service-quantum-ops",
+          "mode": "list",
+          "cachedResultName": "customer-service-quantum-ops"
+        },
+        "options": {
+          "pineconeNamespace": "customer-service"
+        }
+      },
+      "id": "af38ee09-262d-4caf-9a7a-eda3615b2bb1",
+      "name": "Pinecone Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        240,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "52WFxAOVwZS2EP8N",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "options": {}
+      },
+      "id": "2a697ffd-fe72-4dea-92ad-ffa34a7f1487",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        400,
+        464
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "96f2075d-a02e-496f-9b59-1ffbd2c11ade",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        384,
+        672
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are the Quantum-Ops AI Service Assistant.\n\nYour responsibilities:\n1. Answer questions about Quantum-Ops services using the vector store tool\n2. Manage customer support tickets using the ManageTickets tool\n\nQuantum-Ops Services (reference only):\n- Application Development\n- Cloud Application Development\n- Cloud Management\n- Custom Software Development\n- SaaS Development\n- Ads Management\n\nDo not invent services outside this list. If unclear, ask clarifying questions.\n\n---\n\nTicket Management Rules:\n\nCREATE TICKET:\n- Required fields: name, email, subject, description, priority\n- If any field is missing, ask for it before calling the tool\n- Priority options: low, medium, high, urgent\n- Example prompt: \"I need your name, email, a subject line, description of the issue, and priority level\"\n\nCHECK STATUS:\n- Required: ticketId only\n- Ask: \"Could you share the ticket ID so I can look it up?\"\n- Do NOT ask for name/email/subject/description/priority\n\nUPDATE TICKET:\n- Required: ticketId, description (update text)\n- Ask: \"What's the ticket ID and what update should I add?\"\n- Do NOT ask for name/email/subject/priority\n\nCLOSE TICKET:\n- Required: ticketId only\n- Ask: \"Which ticket ID should I close?\"\n- Do NOT ask for name/email/subject/description/priority\n\n---\n\nCRITICAL RESPONSE RULE:\nAfter calling the ManageTickets tool, YOU MUST read the \"messageForUser\" field from the JSON response and include it in your reply to the customer. Never leave the user without a response after tool execution.\n\nExample:\n- Tool returns: {\"messageForUser\": \"I've created ticket TCK-123 for your issue\"}\n- You say: \"I've created ticket TCK-123 for your issue. Our team will get back to you soon.\"\n\n---\n\nGeneral Guidelines:\n- Be concise, professional, and solution-oriented\n- Do not ask for internal fields (timestamps, assignee, SLA, Airtable IDs)\n- If user goes off-topic, gently redirect to supported services\n- Confirm understanding before calling tools\n- Always validate required fields before tool execution"
+        }
+      },
+      "id": "dc582025-322a-4e84-a12a-d18495eda9c2",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -16,
+        1088
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "fileName": "={{ $json.name }}"
+        }
+      },
+      "id": "1e874fc4-cfdd-412a-9ebf-0d7b719506a6",
+      "name": "Download File From Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        32,
+        240
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fPzX3vBUB05drSKd",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Chat with company documents"
+      },
+      "id": "17cc6bde-9d70-4643-955a-fac7f08ef3d3",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -864,
+        1312
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1Ob1nmmIom0mZ8uphjt6VDUR2kT3k5sI4",
+          "mode": "list",
+          "cachedResultName": "quantum-ops services",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Ob1nmmIom0mZ8uphjt6VDUR2kT3k5sI4"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "id": "4be4c8c7-2234-4a5f-af62-c08fb441d4cb",
+      "name": "Google Drive File Updated",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        -304,
+        384
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fPzX3vBUB05drSKd",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1Ob1nmmIom0mZ8uphjt6VDUR2kT3k5sI4",
+          "mode": "list",
+          "cachedResultName": "quantum-ops services",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Ob1nmmIom0mZ8uphjt6VDUR2kT3k5sI4"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "id": "2c1d2ae7-6a6e-4a7e-af47-2081cdaa2cf2",
+      "name": "Google Drive File Created",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        -304,
+        144
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fPzX3vBUB05drSKd",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "650dad2b-ee68-48ec-97de-53ab3eea7b78",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        -368,
+        1088
+      ],
+      "webhookId": "5f1c0c82-0ff9-40c7-9e2e-b1a96ffe24cd",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "## Add docuemnts to vector store when updating or creating new documents in Google Drive",
+        "width": 320
+      },
+      "id": "31aba0ea-407a-4294-a22d-00ac6cc851ca",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "The Google Drive node downloads the file.",
+        "height": 96,
+        "width": 160,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        416
+      ],
+      "typeVersion": 1,
+      "id": "ff1ae16b-030c-47b7-b898-05b3b498ca63",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "The Pinecone Vector Store node indexes the text chunks and their embeddings in a specified Pinecone index.",
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        464,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "13c03078-942c-4632-b921-d5a0f1fc6ea0",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "The Default Data Loader node loads the document content.",
+        "height": 96,
+        "width": 176,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        432
+      ],
+      "typeVersion": 1,
+      "id": "a8d5220a-a1b3-4f8b-9247-fbd3aa22c6d7",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "The Recursive Character Text Splitter node breaks the document into smaller text chunks.",
+        "height": 128,
+        "width": 208,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        544,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "4cb3f356-9a64-4053-b8b3-c9ce37f0392f",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "The Embeddings Google Gemini node generates embeddings for each text chunk using the text-embedding-004 model.",
+        "height": 128,
+        "width": 208,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        656
+      ],
+      "typeVersion": 1,
+      "id": "f1a9b164-eaf4-47cf-8cd6-36e2ddf63967",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "Updates the file Every minute",
+        "height": 96,
+        "width": 192,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "fc755b70-282a-45ba-8e08-118b7f27a0ff",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "Creates the file every minute",
+        "height": 96,
+        "width": 160,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "f24c0fc3-5a79-486b-950e-59da491d7174",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "The Chat Trigger node receives user questions through a chat interface. The user's question is passed to an AI Agent node."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        976
+      ],
+      "typeVersion": 1,
+      "id": "df536fe0-360c-48d8-ad38-651469f66ec9",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "The AI Agent node uses a Vector Store Tool node, linked to a Pinecone Vector Store node in query mode, to retrieve relevant text chunks from Pinecone based on the user's question.",
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        912
+      ],
+      "typeVersion": 1,
+      "id": "84840ce5-a051-4472-ab88-354f0f56da37",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "The Google Gemini Chat Model generates a comprehensive and informative answer based on the retrieved documents.",
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        432,
+        1664
+      ],
+      "typeVersion": 1,
+      "id": "cd438a70-2b5d-4082-836a-a333c545f6b1",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "A Window Buffer Memory node connected to the AI Agent provides short-term memory, allowing for more natural and context-aware conversations.",
+        "height": 144,
+        "width": 224,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -192,
+        1744
+      ],
+      "typeVersion": 1,
+      "id": "c4da1a9f-4f44-4f60-adb1-1ceb8c51ff70",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "The AI Agent sends the retrieved information and the user's question to the Google Gemini Chat Model (gemini-pro).",
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -432,
+        1440
+      ],
+      "typeVersion": 1,
+      "id": "5e28c1a7-2f2b-4630-8b53-f526da53a4fb",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1024
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        448
+      ],
+      "id": "c32bbafa-189d-4720-b5ef-246e4d19d1e0",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "g2k1lm5vHou4MftH",
+          "name": "OpenAi account 22"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        1296
+      ],
+      "id": "dbbffdf9-a09f-40e9-8eb4-4013da59e68f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "g2k1lm5vHou4MftH",
+          "name": "OpenAi account 22"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        1296
+      ],
+      "id": "3c11fc1b-6c75-4b21-a6bc-88cb057c25a1",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1024
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        1744
+      ],
+      "id": "4ad29cb0-8313-4f36-aff6-6416135fa156",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "g2k1lm5vHou4MftH",
+          "name": "OpenAi account 22"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "customer-service-quantum-ops",
+          "mode": "list",
+          "cachedResultName": "customer-service-quantum-ops"
+        },
+        "options": {
+          "pineconeNamespace": "customer-service"
+        }
+      },
+      "id": "d828e96f-e4a8-47b3-ba5d-235ff073654d",
+      "name": "Pinecone Vector Store (Retrieval)",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        80,
+        1504
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "52WFxAOVwZS2EP8N",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "customer-service-quantum-ops",
+        "topK": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        1296
+      ],
+      "id": "ae33bf26-ee9b-49c9-b94e-84ec5fcc3f39",
+      "name": "Answer questions with a vector store"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        1488
+      ],
+      "id": "9d70d5ee-dd1a-4268-9774-4fbe6f1875cd",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "g2k1lm5vHou4MftH",
+          "name": "OpenAi account 22"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": " ⚠️ REQUIRED: You MUST ALWAYS set the 'action' field to exactly one of: create | status | update | close (lowercase).\n  Allowed keys only: action, name, email, subject, description, priority, ticketId. Do NOT send any other keys.\n\n  Use this tool to manage support tickets. The 'action' parameter determines what operation to perform.\n\n  ═══════════════════════════════════════════════\n  1. CREATE NEW TICKET (action=\"create\")\n  ═══════════════════════════════════════════════\n  Required fields:\n    • action: \"create\"\n    • name: customer name\n    • email: customer email\n    • subject: ticket title/summary\n    • description: detailed issue description\n    • priority: low | medium | high | urgent\n\n  Example:\n    action=\"create\", name=\"John Doe\", email=\"john@example.com\", subject=\"Login issue\", description=\"Cannot access dashboard\", priority=\"high\"\n\n  ═══════════════════════════════════════════════\n  2. CHECK TICKET STATUS (action=\"status\")\n  ═══════════════════════════════════════════════\n  Required fields:\n    • action: \"status\"\n    • ticketId: the ticket ID to look up\n\n  Do NOT send: name, email, subject, description, priority\n\n  Example:\n    action=\"status\", ticketId=\"TCK-1733148920123-456\"\n\n  ═══════════════════════════════════════════════\n  3. UPDATE EXISTING TICKET (action=\"update\")\n  ═══════════════════════════════════════════════\n  Required fields:\n    • action: \"update\"\n    • ticketId: the ticket ID to update\n    • description: new update text/details (MUST NOT be empty)\n\n  Do NOT send: name, email, subject, priority\n\n  Example:\n    action=\"update\", ticketId=\"TCK-1733148920123-456\", description=\"Tried the suggested fix, still not working\"\n\n  ⚠️ If description is empty or ticket is closed, the tool will reject the update with an error message.\n\n  ═══════════════════════════════════════════════\n  4. CLOSE TICKET (action=\"close\")\n  ═══════════════════════════════════════════════\n  Required fields:\n    • action: \"close\"\n    • ticketId: the ticket ID to close\n\n  Do NOT send: name, email, subject, description, priority\n\n  Example:\n    action=\"close\", ticketId=\"TCK-1733148920123-456\"\n\n  ═══════════════════════════════════════════════\n  ⛔ CRITICAL RULES:\n  ═══════════════════════════════════════════════\n  • NEVER use action=\"sendMessage\" or any other value\n  • NEVER omit the action parameter\n  • ALWAYS use lowercase for action values\n  • ONLY use these exact action values: create | status | update | close\n  • DO NOT send unnecessary fields (name/email/subject/priority) for status/update/close operations",
+        "workflowId": {
+          "__rl": true,
+          "value": "GrVcpskgWgZiXxle",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/GrVcpskgWgZiXxle",
+          "cachedResultName": "Ticket Manager (Airtable)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('name', ``, 'string') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('subject', ``, 'string') }}",
+            "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('description', ``, 'string') }}",
+            "priority": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('priority', ``, 'string') }}",
+            "action": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('action', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        1328
+      ],
+      "id": "4fab6b01-7d79-40f2-ae65-717c852ee109",
+      "name": "Call 'Ticket Manager (Airtable)'"
+    }
+  ],
+  "pinData": {
+    "Google Drive File Created": [
+      {
+        "json": {
+          "parents": [
+            "1Ob1nmmIom0mZ8uphjt6VDUR2kT3k5sI4"
+          ],
+          "lastModifyingUser": {
+            "displayName": "Dileep Kumar Alajangi",
+            "kind": "drive#user",
+            "me": true,
+            "permissionId": "08969090428530865000",
+            "emailAddress": "dileep@quantum-ops.com",
+            "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocLodchc-2m9nmsr09WBFrlKZHGGwSRTUo272Zv-S6sNbiWcSg=s64"
+          },
+          "owners": [
+            {
+              "displayName": "Dileep Kumar Alajangi",
+              "kind": "drive#user",
+              "me": true,
+              "permissionId": "08969090428530865000",
+              "emailAddress": "dileep@quantum-ops.com",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocLodchc-2m9nmsr09WBFrlKZHGGwSRTUo272Zv-S6sNbiWcSg=s64"
+            }
+          ],
+          "permissions": [
+            {
+              "kind": "drive#permission",
+              "id": "08969090428530865000",
+              "type": "user",
+              "emailAddress": "dileep@quantum-ops.com",
+              "role": "owner",
+              "displayName": "Dileep Kumar Alajangi",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocLodchc-2m9nmsr09WBFrlKZHGGwSRTUo272Zv-S6sNbiWcSg=s64",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "spaces": [
+            "drive"
+          ],
+          "capabilities": {
+            "canAcceptOwnership": false,
+            "canAddChildren": false,
+            "canAddMyDriveParent": false,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canChangeItemDownloadRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canChangeViewersCanCopyContent": true,
+            "canComment": true,
+            "canCopy": true,
+            "canDelete": true,
+            "canDisableInheritedPermissions": false,
+            "canDownload": true,
+            "canEdit": true,
+            "canEnableInheritedPermissions": true,
+            "canListChildren": false,
+            "canModifyContent": true,
+            "canModifyContentRestriction": true,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canModifyLabels": false,
+            "canMoveChildrenWithinDrive": false,
+            "canMoveItemIntoTeamDrive": true,
+            "canMoveItemOutOfDrive": true,
+            "canMoveItemWithinDrive": true,
+            "canReadLabels": false,
+            "canReadRevisions": true,
+            "canRemoveChildren": false,
+            "canRemoveContentRestriction": false,
+            "canRemoveMyDriveParent": true,
+            "canRename": true,
+            "canShare": true,
+            "canTrash": true,
+            "canUntrash": true
+          },
+          "permissionIds": [
+            "08969090428530865000"
+          ],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "downloadRestrictions": {
+            "itemDownloadRestriction": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            },
+            "effectiveDownloadRestrictionWithContext": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            }
+          },
+          "kind": "drive#file",
+          "id": "1zHgOsl2bapKfXqxby193hfOxMCeNDz5Y",
+          "name": "quantum_ops_services_summary.txt",
+          "mimeType": "text/plain",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "version": "3",
+          "webContentLink": "https://drive.google.com/uc?id=1zHgOsl2bapKfXqxby193hfOxMCeNDz5Y&export=download",
+          "webViewLink": "https://drive.google.com/file/d/1zHgOsl2bapKfXqxby193hfOxMCeNDz5Y/view?usp=drivesdk",
+          "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/text/plain",
+          "hasThumbnail": true,
+          "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBOL_2ZIUArL_Lron-cjvkojqyMSL_AHeQtvUNzJ10D77Y9cSQzMqp7k0Uier6j82XkrRaL_YlwrYz5ccTFCebSi4SYiCzgtZqYQgf5hnzLPfww=s220",
+          "thumbnailVersion": "1",
+          "viewedByMe": true,
+          "viewedByMeTime": "2025-11-27T05:40:12.212Z",
+          "createdTime": "2025-11-27T05:40:12.212Z",
+          "modifiedTime": "2025-11-27T05:39:48.000Z",
+          "modifiedByMeTime": "2025-11-27T05:39:48.000Z",
+          "modifiedByMe": true,
+          "shared": false,
+          "ownedByMe": true,
+          "viewersCanCopyContent": true,
+          "copyRequiresWriterPermission": false,
+          "writersCanShare": true,
+          "originalFilename": "quantum_ops_services_summary.txt",
+          "fullFileExtension": "txt",
+          "fileExtension": "txt",
+          "md5Checksum": "8b79704c8a24e11447d990bb5b733dcd",
+          "sha1Checksum": "9ad6b9303e0947eaf200d91cac9c61e1bd4da3cb",
+          "sha256Checksum": "f1f01c73af95953280bc7991790cf1e1dad5503f67daa9363fec86e39d57dabf",
+          "size": "3290",
+          "quotaBytesUsed": "3290",
+          "headRevisionId": "0B7kjiYFeAsHbUkdwcU0vYWxUU1BybW5wekxXMzhNcFRRT2hvPQ",
+          "isAppAuthorized": false,
+          "inheritedPermissionsDisabled": false
+        }
+      }
+    ],
+    "When chat message received": [
+      {
+        "json": {
+          "sessionId": "b3a771f1983740fab4f05fc7e60ff8df",
+          "action": "sendMessage",
+          "chatInput": "check my ticket status and my id is TCK-1764747627276-977 "
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive File Created": {
+      "main": [
+        [
+          {
+            "node": "Download File From Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive File Updated": {
+      "main": [
+        [
+          {
+            "node": "Download File From Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File From Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store (Retrieval)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store (Retrieval)": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Answer questions with a vector store",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer questions with a vector store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer questions with a vector store",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Ticket Manager (Airtable)'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "029f6d56-fd5e-4d90-8a12-506d85a1ad2a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "00909d7feb8e9ba37a5e201aa76b7e43bb3e29d20ad98700fd8a52c9ea9d3d68"
+  },
+  "id": "iGXShVGHvXpevJGE",
+  "tags": []
+}

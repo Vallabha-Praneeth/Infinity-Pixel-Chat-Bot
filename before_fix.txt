@@ -1,0 +1,49 @@
+============================================
+  Close Bug Reproduction Test
+============================================
+
+Step 1: Creating a new ticket...
+Create response:
+{
+  "action": "create",
+  "status": "open",
+  "priority": "medium",
+  "messageForUser": "I've created ticket TCK-1764672714331-164 for your issue \"This ticket is created to test the close action bug\". Our team will get back to you soon.",
+  "internalNotes": ""
+}
+
+✅ Created ticket: TCK-1764672714331-164
+
+Step 2: Closing ticket TCK-1764672714331-164...
+Close response:
+{
+  "action": "close",
+  "ticketId": "TCK-1764663980054-324",
+  "status": "closed",
+  "priority": "medium",
+  "messageForUser": "I've closed ticket TCK-1764663980054-324.",
+  "internalNotes": ""
+}
+
+Step 3: Validating response...
+
+Comparison:
+  Expected ticket ID: TCK-1764672714331-164
+  Response ticket ID: TCK-1764663980054-324
+
+❌ FAIL: Ticket ID mismatch!
+
+BUG CONFIRMED:
+  - We created ticket: TCK-1764672714331-164
+  - But close returned: TCK-1764663980054-324
+
+This is the bug we need to fix.
+Full close response:
+{
+  "action": "close",
+  "ticketId": "TCK-1764663980054-324",
+  "status": "closed",
+  "priority": "medium",
+  "messageForUser": "I've closed ticket TCK-1764663980054-324.",
+  "internalNotes": ""
+}

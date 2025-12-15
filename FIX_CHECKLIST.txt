@@ -1,0 +1,232 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                  TICKET MANAGER BUG FIX CHECKLIST                  ║
+║                      Track Your Progress Here                      ║
+╚════════════════════════════════════════════════════════════════════╝
+
+Date: ____________    Time Started: ____________
+
+
+PRE-FIX PREPARATION
+═══════════════════════════════════════════════════════════════════
+
+☐ 1. Backup Workflow
+     Download "Ticket Manager (Airtable)" as JSON
+     Saved to: _________________________________________________
+
+☐ 2. Set Environment Variables
+     export N8N_WEBHOOK_BASE="https://polarmedia.app.n8n.cloud"
+     export N8N_TICKET_WEBHOOK_PATH="/webhook/tt"
+
+☐ 3. Run Pre-Fix Test
+     ./test_close_bug_reproduction.sh > before_fix.txt
+     Result: ☐ FAIL (expected)
+
+
+THE 7 FIXES
+═══════════════════════════════════════════════════════════════════
+
+FIX #1: CLEAR PINNED DATA (5 min)
+──────────────────────────────────────────────────────────────────
+☐ Open workflow in n8n editor
+☐ Check "Airtable - Find Ticket (Close)" - unpin if needed
+☐ Check "Code - Prepare Close" - unpin if needed
+☐ Check "Airtable - Close Ticket" - unpin if needed
+☐ Check "Code - Build Close Response" - unpin if needed
+☐ Check Update branch nodes - unpin if needed
+☐ Check Status branch nodes - unpin if needed
+☐ Save workflow (Ctrl+S)
+
+Time completed: ____________
+
+
+FIX #2: FIX CLOSE RESPONSE FLOW (10 min)
+──────────────────────────────────────────────────────────────────
+☐ Find "Code - Build Close Response" node
+☐ Locate connection to "Send message and wait for response1" (Slack)
+☐ Click connection line
+☐ Press Delete key
+☐ Verify no outgoing connections from Build Close Response
+☐ Save workflow (Ctrl+S)
+
+Time completed: ____________
+
+
+FIX #3: FIX CLOSE TICKET ID CODE (15 min)
+──────────────────────────────────────────────────────────────────
+☐ Click on "Code - Build Close Response" node
+☐ Find line: const ticketId = item.json.ticketId || ...
+☐ Replace with new code (see guide for full code)
+☐ Key addition: $('Code - Prepare Close').item.json.ticketId
+☐ Save workflow (Ctrl+S)
+
+Time completed: ____________
+
+
+QUICK TEST: CLOSE ACTION
+──────────────────────────────────────────────────────────────────
+☐ Create test ticket
+☐ Close the ticket
+☐ Check response has correct ticket ID
+☐ Result: ☐ PASS  ☐ FAIL
+
+If PASS ✅, continue to Fix #4
+If FAIL ❌, review Fixes #1-3
+
+
+FIX #4: FIX UPDATE RESPONSE FLOW (5 min)
+──────────────────────────────────────────────────────────────────
+☐ Find "Code - Build Update Response" node
+☐ Delete connection to "Send a message1" (Slack)
+☐ Verify no outgoing connections
+☐ Save workflow (Ctrl+S)
+
+Time completed: ____________
+
+
+FIX #5: FIX STATUS RESPONSE FLOW (2 min)
+──────────────────────────────────────────────────────────────────
+☐ Find "Code - Build Status Response" node
+☐ Verify it has NO outgoing connections (already correct)
+☐ If it has connections, delete them
+☐ Save workflow (Ctrl+S)
+
+Time completed: ____________
+
+
+FIX #6: FIX CREATE RESPONSE FLOW (5 min)
+──────────────────────────────────────────────────────────────────
+☐ Find "Code - Build Create Response" node
+☐ Delete connection to "Send a message" (Slack)
+☐ Verify no outgoing connections
+☐ Save workflow (Ctrl+S)
+
+Time completed: ____________
+
+
+FIX #7: ADD TICKET ID TO AIRTABLE UPDATE (5 min)
+──────────────────────────────────────────────────────────────────
+☐ Find "Airtable - Close Ticket" node
+☐ Click "Add Column" button
+☐ Column Name: Ticket ID
+☐ Value: ={{ $json.ticketId }}
+☐ Verify columns list includes Ticket ID
+☐ Save workflow (Ctrl+S)
+
+Time completed: ____________
+
+
+POST-FIX TESTING
+═══════════════════════════════════════════════════════════════════
+
+COMPREHENSIVE TEST
+──────────────────────────────────────────────────────────────────
+☐ Run: ./all_test.sh
+
+Results:
+  ☐ Create:                    ☐ PASS  ☐ FAIL
+  ☐ Status:                    ☐ PASS  ☐ FAIL
+  ☐ Update:                    ☐ PASS  ☐ FAIL
+  ☐ Update (no text):          ☐ PASS  ☐ FAIL
+  ☐ Close:                     ☐ PASS  ☐ FAIL
+  ☐ Update after closed:       ☐ PASS  ☐ FAIL
+
+Overall Result: ☐ ALL PASS ✅  ☐ SOME FAILED ❌
+
+
+CLOSE BUG REPRODUCTION TEST
+──────────────────────────────────────────────────────────────────
+☐ Run: ./test_close_bug_reproduction.sh > after_fix.txt
+
+Result: ☐ PASS ✅  ☐ FAIL ❌
+
+
+ALL ACTIONS RESPONSE TEST
+──────────────────────────────────────────────────────────────────
+☐ Run: ./test_all_actions_responses.sh
+
+Results:
+  ☐ Create response:           ☐ PASS  ☐ FAIL
+  ☐ Status response:           ☐ PASS  ☐ FAIL
+  ☐ Update response:           ☐ PASS  ☐ FAIL
+  ☐ Close response:            ☐ PASS  ☐ FAIL
+
+
+COMPARE BEFORE AND AFTER
+──────────────────────────────────────────────────────────────────
+☐ cat before_fix.txt | grep -E "PASS|FAIL"
+☐ cat after_fix.txt | grep -E "PASS|FAIL"
+
+Before fix: _______ PASS, _______ FAIL
+After fix:  _______ PASS, _______ FAIL
+
+
+FINAL VALIDATION
+═══════════════════════════════════════════════════════════════════
+
+☐ All 7 fixes completed
+☐ Workflow saved
+☐ All tests passing
+☐ No regression (old features still work)
+☐ Close action returns correct ticket ID
+☐ Update action returns data (not empty)
+☐ Status action returns data (not empty)
+☐ Create action returns data
+
+
+SUCCESS! 🎉
+═══════════════════════════════════════════════════════════════════
+
+☐ Update CLAUDE.md with notes about fixes
+☐ Keep backup JSON safe
+☐ Mark task as complete
+
+
+OPTIONAL: SLACK NOTIFICATIONS (LATER)
+═══════════════════════════════════════════════════════════════════
+
+If you want to add Slack notifications with Airtable links:
+
+☐ Read SLACK_NOTIFICATION_ENHANCEMENT.md
+☐ Add Code - Prepare Slack Message nodes
+☐ Connect in parallel (not blocking)
+☐ Update Slack message format
+☐ Add Airtable record links
+☐ Test notifications
+
+
+NOTES / ISSUES ENCOUNTERED
+═══════════════════════════════════════════════════════════════════
+
+Issue at Fix #___:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+Resolution:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+
+Issue at Fix #___:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+Resolution:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+
+COMPLETION
+═══════════════════════════════════════════════════════════════════
+
+Time finished: ____________
+Total time: ____________
+Status: ☐ SUCCESS ✅  ☐ PARTIAL ⚠️  ☐ FAILED ❌
+
+Next steps:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________

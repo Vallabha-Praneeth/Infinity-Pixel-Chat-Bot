@@ -1,0 +1,112 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test Results
+pre_fix_*.txt
+post_fix_*.txt
+test_results/
+*.test.log
+
+# Backup Files
+*.backup
+*.bak
+*_BACKUP_*.json
+Ticket_Manager_BACKUP_*.json
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if using any Node.js tools)
+node_modules/
+
+# Sensitive Data (IMPORTANT)
+credentials.json
+*.key
+*.pem
+secrets/
+.secrets
+
+# Personal Notes
+notes.txt
+personal_notes/
+
+# Generated Documentation (keep source)
+# Note: We're keeping .docx files in repo as they're the final deliverables
+
+# Python script outputs (regenerate as needed)
+# Note: Keeping .docx in repo, but you can regenerate them
+
+# Mac specific
+.AppleDouble
+.LSOverride
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
