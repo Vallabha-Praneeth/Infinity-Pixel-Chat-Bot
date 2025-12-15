@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/Vallabha-Praneeth/Infinity-Pixel-Chat-Bot/discussions
+    about: Ask questions or discuss ideas with the community
+  - name: Documentation
+    url: https://github.com/Vallabha-Praneeth/Infinity-Pixel-Chat-Bot/blob/main/docs/
+    about: Browse our comprehensive documentation
