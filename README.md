@@ -81,9 +81,9 @@ User → Chat Interface
    ```
 
 2. **Import workflows to n8n**
-   - Import `RAG Workflow For( Customer service chat-bot).json`
-   - Import `Ticket Manager (Airtable).json`
-   - Import `Slack Actions.json` (optional)
+   - Import `workflows/RAG Workflow For( Customer service chat-bot).json`
+   - Import `workflows/Ticket Manager (Airtable).json`
+   - Import `workflows/Slack Actions.json` (optional)
 
 3. **Configure credentials in n8n**
    - Add Airtable Personal Access Token
@@ -222,10 +222,11 @@ Track these KPIs to measure system effectiveness:
 
 ```
 infinity-pixel-chatbot/
-├── RAG Workflow For( Customer service chat-bot).json  # Main AI workflow
-├── Ticket Manager (Airtable).json                     # Ticket CRUD operations
-├── Slack Actions.json                                  # Slack notifications
-├── customer_notifications_workflow.json                # Customer alerts
+├── workflows/                                          # n8n workflow definitions
+│   ├── RAG Workflow For( Customer service chat-bot).json
+│   ├── Ticket Manager (Airtable).json
+│   ├── Slack Actions.json
+│   └── customer_notifications_workflow.json
 ├── airtable_tickets_template.csv                      # Database schema
 ├── test_*.sh                                          # Test scripts
 ├── all_test.sh                                        # Complete test suite
